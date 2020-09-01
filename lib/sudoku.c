@@ -44,7 +44,7 @@ void solve(Sudoku *puzzle, int iterations) {
             }
           }
 
-          for (k = 1; k <= 9; k++)
+          for (int k = 1; k <= 9; k++)
             if (puzzle->grid[i][j].possible[k] == 1) {
               count++;
               catch = k;
@@ -54,7 +54,7 @@ void solve(Sudoku *puzzle, int iterations) {
           if (count == 1) {
             puzzle->grid[i][j].value = catch;
           } else {
-            for (k = 1; k <= 9; k++)
+            for (int k = 1; k <= 9; k++)
               if (puzzle->grid[i][j].possible[k] == 1) {
                 int quadrow = i - (i % 3);
                 int quadcol = j - (j % 3);
@@ -65,7 +65,7 @@ void solve(Sudoku *puzzle, int iterations) {
                   for (int qj = 0; qj < 3; qj++)
                     matrix[qi][qj] = 0;
 
-                for (qi = 0; qi < 3; qi++) {
+                for (int qi = 0; qi < 3; qi++) {
                   for (int qj = 0; qj < 3; qj++) {
                     if (rowHasValue(puzzle, qi + quadrow, k)) {
                       matrix[0][qj] = 1;
@@ -88,7 +88,7 @@ void solve(Sudoku *puzzle, int iterations) {
                 int catch_j;
                 int count = 0;
 
-                for (qi = 0; qi < 3; qi++) {
+                for (int qi = 0; qi < 3; qi++) {
                   for (int qj = 0; qj < 3; qj++) {
                     if (matrix[qi][qj] == 0) {
                       printf("%d ", matrix[qi][qj]);
