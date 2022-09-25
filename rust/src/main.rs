@@ -52,12 +52,17 @@ fn main() {
       Err(_) => {
         if debug {
           println!("Failed to solve #{}", stats.total);
-          puzzle.display();
+          puzzle.display_debug();
         }
         stats.failures.push(stats.total);
         stats.failed +=1;
       },
-      Ok(_) => stats.solved += 1,
+      Ok(_) => {
+        stats.solved += 1;
+        print!("{}", color::Fg(color::Green));
+        puzzle.display();
+        print!("{}", color::Fg(color::White));
+      }
     }
 
     p = puzzles.next();

@@ -1,7 +1,9 @@
 pub struct Puzzle {
   map: Vec<u32>,
   options: Vec<Vec<u32>>,
-  placed: usize
+  placed: usize,
+  fail: bool,
+  reason: String
 }
 
 struct Tile {
@@ -39,7 +41,7 @@ impl Puzzle {
   pub fn solve(&mut self) -> Result<u32, u32> {
     let mut action_taken = false;
 
-    while !self.is_finished() {
+    while !self.is_valid() {
       for x in 0..SIZE {
         for y in 0..SIZE {
           // if there is only one option in a tile, set that tile to the option
@@ -104,14 +106,18 @@ impl Puzzle {
             for sy in 0..SQUARE {
               let x = i * SQUARE + sx; 
               let y = j * SQUARE + sy;
-          
-              match candidates.iter().position(|a| a.num == self.get(x, y)) {
-                Some(index) => { 
-                  candidates[index].count += 1;
+              
+              let options = self.get_options(x, y);
+
+              for o in options {
+                match candidates.iter().position(|a| a.num == *o) {
+                  Some(index) => { 
+                    candidates[index].count += 1;
+                  }
+                  None => {
+                    candidates.push(Tile {num: *o, count: 1, x, y})
+                  },
                 }
-                None => {
-                  candidates.push(Tile {num: self.get(x, y), count: 1, x, y})
-                },
               }
             }
           }
@@ -127,20 +133,17 @@ impl Puzzle {
 
       // if we haven't done anything, escape the loop
       if !action_taken {
-        return Result::Err(0);
+        self.fail(String::from("Stagnent"));
       } else {
         action_taken = false;
+      }
+
+      if self.fail {
+        return Result::Err(0);
       }
     }
 
     return Result::Ok(1);
-  }
-
-  pub fn is_finished(&self) -> bool {
-    if self.placed >= SIZE * SIZE {
-      return true; 
-    }
-    return false;
   }
 
   fn get_empty_row() -> Vec<u32> {
@@ -151,8 +154,15 @@ impl Puzzle {
     return Puzzle {
       map: vec![0; SIZE * SIZE],
       options: vec![Puzzle::get_empty_row(); SIZE * SIZE],
-      placed: 0
+      placed: 0,
+      fail: false,
+      reason: String::from("N/A")
     };
+  }
+
+  fn fail(&mut self, reason: String) {
+    self.fail = true;
+    self.reason = reason;
   }
 
   pub fn display(&self) {
@@ -169,7 +179,44 @@ impl Puzzle {
       print!("| \n-------------------------------------\n");
       
     }
-    println!("{:?}", self.options);
+  }
+
+  pub fn display_debug(&self) {
+    print!("-------------------------------------\n");
+    for i in 0..SIZE {
+      let mut options = String::from("|");
+      for j in 0..SIZE {
+        let p = self.map[i * SIZE + j];
+        if p != 0 {
+          print!("| {} ", p);
+        } else {
+          print!("|   ");
+        }
+        let o = &self.options[i * SIZE + j];
+        if o.len() > 0 {
+          options += format!("  {:?}", o).as_str();
+        }
+      } 
+      print!("{}", options);
+      print!("\n-------------------------------------\n");
+    }
+    println!("Failed to solve? {} \nReason: {}", self.fail, self.reason);
+  }
+
+  pub fn is_valid(&self) -> bool {
+    if self.placed < SIZE * SIZE {
+      return false;
+    }
+    
+    for x in 0..SIZE {
+      for y in 0..SIZE {
+        if self.get(x, y) == 0 {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   fn get(&self, x: usize, y: usize) -> u32{
@@ -177,6 +224,10 @@ impl Puzzle {
   }
 
   fn set(&mut self, x: usize, y: usize, v: u32) {
+    if self.get(x, y) != 0 {
+      self.fail(format!("{} tried to be placed on {} {}", v, x, y));
+    }
+
     self.map[x + y * SIZE] = v;
 
     self.clear_options(x, y);
