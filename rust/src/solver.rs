@@ -6,11 +6,16 @@ pub struct Puzzle {
   reason: String
 }
 
+#[derive(Debug)]
+struct Pos {
+  x: usize,
+  y: usize
+}
+
+#[derive(Debug)]
 struct Tile {
   num: u32,
-  count: u32,
-  x: usize,
-  y: usize,
+  instances: Vec<Pos>
 }
 
 const SIZE:usize = 9;
@@ -106,30 +111,75 @@ impl Puzzle {
             for sy in 0..SQUARE {
               let x = i * SQUARE + sx; 
               let y = j * SQUARE + sy;
-              
-              let options = self.get_options(x, y);
 
-              for o in options {
-                match candidates.iter().position(|a| a.num == *o) {
-                  Some(index) => { 
-                    candidates[index].count += 1;
+              if self.get(x, y) == 0 {
+                let options = self.get_options(x, y);
+              
+                for o in options {
+                  match candidates.iter().position(|a| a.num == *o) {
+                    Some(index) => { 
+                      candidates[index].instances.push(Pos {x, y});
+                    }
+                    None => {
+                      candidates.push(Tile {num: *o, instances: vec![Pos {x, y}]})
+                    },
                   }
-                  None => {
-                    candidates.push(Tile {num: *o, count: 1, x, y})
-                  },
                 }
               }
             }
           }
 
-          for i in candidates {
-            if i.count == 1 {
-              self.set(i.x, i.y, i.num);
+          for candidate in candidates {
+            if candidate.instances.len() == 1 {
+              self.set(candidate.instances[0].x, candidate.instances[0].y, candidate.num);
               action_taken = true;
-            }
+            } else {
+              let mut inline_x = true;
+              let mut inline_y = true;
+
+              for p1 in candidate.instances.as_slice() {
+                for p2 in candidate.instances.as_slice() {
+                  if p1.x != p2.x {
+                    inline_x = false;
+                  }
+
+                  if p1.y != p2.y {
+                    inline_y = false;
+                  }
+                }
+              }
+
+              if inline_x {
+                for y in 0..SIZE {
+                  match candidate.instances.iter().position(|a| a.y == y) {
+                    Some(_) => (),
+                    None => {
+                      self.remove_option(candidate.instances[0].x, y, candidate.num);
+                    },
+                  }
+                }
+              }
+
+              if inline_y {
+                for x in 0..SIZE {
+                  match candidate.instances.iter().position(|a| a.x == x) {
+                    Some(_) => (),
+                    None => {
+                      self.remove_option(x, candidate.instances[0].y, candidate.num);
+                    },
+                  }
+                }
+              }
+            } 
           }
         }
       }
+
+
+
+      // TODO: Doubles
+      // TODO: Triples
+      // TODO: if the only options for a number in a square are in a line, assume that number can't appear in that line in other squares
 
       // if we haven't done anything, escape the loop
       if !action_taken {
@@ -238,7 +288,8 @@ impl Puzzle {
 
   fn set(&mut self, x: usize, y: usize, v: u32) {
     if self.get(x, y) != 0 {
-      self.fail(format!("{} tried to be placed on {} {}", v, x, y));
+      self.fail(format!("{} tried to be placed on {} {} where {} already exists", v, x, y, self.get(x,y)));
+      return;
     }
 
     self.map[x + y * SIZE] = v;
@@ -274,6 +325,10 @@ impl Puzzle {
 
   fn remove_option(&mut self, x: usize, y: usize, v: u32) -> &Vec<u32>{
     let i = x + y * SIZE;
+
+    if self.options[i].len() == 0 && self.get(x, y) == 0 {
+      self.fail(format!("Tried to remove {} from {} {} when there were no options left", v, x, y))
+    }
 
     match self.options[i].iter().position(|&a| a == v) {
       Some(index) => { self.options[i].remove(index); }

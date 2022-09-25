@@ -51,7 +51,7 @@ fn main() {
     match puzzle.solve() {
       Err(_) => {
         if debug {
-          println!("Failed to solve #{}", stats.total);
+          println!("Puzzle #{}", stats.total);
           puzzle.display_debug();
         }
         stats.failures.push(stats.total);
