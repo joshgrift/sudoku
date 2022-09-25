@@ -1,7 +1,10 @@
+extern crate termion;
+
 use std::env;
 use std::fs::File;
 use std::path::Path;
 use std::io::prelude::*;
+use termion::color;
 
 mod solver;
 
@@ -13,11 +16,17 @@ struct Stats {
 }
 
 fn main() {
-  const DEBUG:bool = true;
-  let mut stats: Stats = Stats { total: 0, solved: 0, failed: 0, failures: [].to_vec()};
+  print!("{}", color::Fg(color::LightBlue));
+  println!("               _       _          \n              | |     | |         \n ___ _   _  __| | ___ | | ___   _ \n/ __| | | |/ _` |/ _ \\| |/ / | | |\n\\__ \\ |_| | (_| | (_) |   <| |_| |\n|___/\\__,_|\\__,_|\\___/|_|\\_\\___,_|");
+  println!("                            solver\n");
 
   let args: Vec<String> = env::args().collect();
-  println!("Testing {}.", args[1]);
+  let debug:bool = if args.len() > 2 { true } else {false};
+  let mut stats: Stats = Stats { total: 0, solved: 0, failed: 0, failures: [].to_vec()};
+  
+  if debug {
+    println!("{}Loading puzzles from {}", color::Fg(color::LightBlack), args[1]);
+  } 
 
   let path = Path::new(&args[1]);
   let display = path.display();
@@ -41,7 +50,7 @@ fn main() {
 
     match puzzle.solve() {
       Err(_) => {
-        if DEBUG {
+        if debug {
           println!("Failed to solve #{}", stats.total);
           puzzle.display();
         }
@@ -53,12 +62,11 @@ fn main() {
 
     p = puzzles.next();
   }
-
-  if DEBUG {
-    //println!("Failed to solve {:?}", stats.failures);
-  }
-
-  println!("Attempted  {}", stats.total);
-  println!("Solved     {}", stats.solved);
-  println!("Failed     {}", stats.failed);
+  
+  println!("{}-----------------", color::Fg(color::White));
+  println!("{} Attempted  {}", color::Fg(color::Blue), stats.total);
+  println!("{} Failed     {}", color::Fg(color::LightRed), stats.failed);
+  println!("{} Solved     {}", color::Fg(color::Green), stats.solved);
+  println!("{}-----------------", color::Fg(color::White));
+  println!("{} Success    {}%", color::Fg(color::White), (stats.solved as f32 / stats.total as f32 * 100 as f32).floor());
 }

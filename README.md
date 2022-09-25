@@ -14,6 +14,7 @@ The samples folder has a variety of different test cases. Every binary takes one
 - `cd rust`
 - `cargo build`
 - `cargo run -- ../samples/all.txt`
+- `cargo run -- ../samples/all.txt --debug` to show which puzzles failed
 
 # Credits
 - puzzles generated using [qqwing](https://qqwing.com)
