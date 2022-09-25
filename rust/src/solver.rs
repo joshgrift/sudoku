@@ -18,7 +18,6 @@ impl Puzzle {
         puzzle.set(x, y, c.to_digit(10).unwrap())
       }
 
-      
       if x + 1 >= SIZE {
         x = 0;
         y += 1;
@@ -36,9 +35,56 @@ impl Puzzle {
     while !self.is_finished() {
       for x in 0..SIZE {
         for y in 0..SIZE {
+          // if there is only one option in a tile, set that tile to the option
           if self.get_options(x, y).len() == 1 {
             self.set(x, y, self.get_options(x, y)[0]);
+            action_taken = true;
           }
+        }
+      }
+
+      // check for single empty tiles horizontally 
+      for y in 0..SIZE {
+        let mut row: Vec<u32> = Puzzle::get_empty_row();
+        let mut new_x:usize = 0;
+
+        for x in 0..SIZE {
+          match row.iter().position(|&a| a == self.get(x, y)) {
+            Some(index) => { 
+              row.remove(index); 
+              
+            },
+            None => {
+              new_x = x; 
+            }
+          }
+        }
+
+        if row.len() == 1 {
+          self.set(new_x, y, row[0]);
+          action_taken = true;
+        }
+      }
+
+      // check for single empty tile vertically
+      for x in 0..SIZE {
+        let mut column: Vec<u32> = Puzzle::get_empty_row();
+        let mut new_y:usize = 0;
+
+        for y in 0..SIZE {
+          match column.iter().position(|&a| a == self.get(x, y)) {
+            Some(index) => { 
+              column.remove(index); 
+            }
+            None => {
+              new_y = y; 
+            },
+          }
+        }
+
+        if column.len() == 1 {
+          self.set(x, new_y, column[0]);
+          action_taken = true;
         }
       }
 
@@ -46,7 +92,7 @@ impl Puzzle {
       if !action_taken {
         return Result::Err(0);
       } else {
-        action_taken = true;
+        action_taken = false;
       }
     }
 
@@ -60,15 +106,14 @@ impl Puzzle {
     return false;
   }
 
-  fn make_empty() -> Puzzle {
-    let mut empty_options: Vec<u32> = vec![];
-    for k in 0..SIZE {
-      empty_options.push((k + 1) as u32);
-    }
+  fn get_empty_row() -> Vec<u32> {
+    return vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+  }
 
+  fn make_empty() -> Puzzle {
     return Puzzle {
       map: vec![0; SIZE * SIZE],
-      options: vec![empty_options.clone(); SIZE * SIZE],
+      options: vec![Puzzle::get_empty_row(); SIZE * SIZE],
       placed: 0
     };
   }
@@ -118,6 +163,8 @@ impl Puzzle {
         self.remove_option(sx * SQUARE + j, sy * SQUARE + i, v);
       }
     }
+
+    self.placed += 1;
   }
 
   fn get_options(&self, x: usize, y: usize) -> &Vec<u32>{
