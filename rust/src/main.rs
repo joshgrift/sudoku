@@ -61,7 +61,7 @@ fn main() {
         stats.solved += 1;
         print!("{}", color::Fg(color::Green));
         puzzle.display();
-        print!("{}", color::Fg(color::White));
+        print!("{}", color::Fg(color::LightBlack));
       }
     }
 

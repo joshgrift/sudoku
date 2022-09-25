@@ -165,42 +165,55 @@ impl Puzzle {
     self.reason = reason;
   }
 
-  pub fn display(&self) {
-    print!("-------------------------------------\n");
+  fn display_helper(&self, debug: bool) {
+    print!("╔═══════════╦═══════════╦═══════════╗\n");
     for i in 0..SIZE {
+      let mut options = String::from("║");
       for j in 0..SIZE {
         let p = self.map[i * SIZE + j];
         if p != 0 {
-          print!("| {} ", p);
+          if j % SQUARE == 0 {
+            print!("║ {} ", p);
+          } else {
+            print!("│ {} ", p);
+          }
         } else {
-          print!("|   ");
+          if j % SQUARE == 0 {
+            print!("║   ");
+          } else {
+            print!("│   ");
+          }
         }
-      } 
-      print!("| \n-------------------------------------\n");
-      
-    }
-  }
 
-  pub fn display_debug(&self) {
-    print!("-------------------------------------\n");
-    for i in 0..SIZE {
-      let mut options = String::from("|");
-      for j in 0..SIZE {
-        let p = self.map[i * SIZE + j];
-        if p != 0 {
-          print!("| {} ", p);
-        } else {
-          print!("|   ");
-        }
         let o = &self.options[i * SIZE + j];
         if o.len() > 0 {
           options += format!("  {:?}", o).as_str();
         }
       } 
-      print!("{}", options);
-      print!("\n-------------------------------------\n");
+      
+      if debug {
+        print!("{}", options);
+      } else {
+        print!("║");
+      }
+      
+      if i == 2 || i == 5 {
+        print!("\n║═══════════╬═══════════╬═══════════║\n");
+      } else if i == 8 {
+        print!("\n╚═══════════╩═══════════╩═══════════╝\n");
+      } else {
+        print!("\n║───┼───┼───║───┼───┼───║───┼───┼───║\n");
+      }
     }
+  }
+
+  pub fn display_debug(&self) {
+    self.display_helper(true);
     println!("Failed to solve? {} \nReason: {}", self.fail, self.reason);
+  }
+
+  pub fn display(&self) {
+    self.display_helper(false);
   }
 
   pub fn is_valid(&self) -> bool {
