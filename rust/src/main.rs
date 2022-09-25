@@ -37,7 +37,7 @@ fn main() {
 
   while p != None {
     stats.total += 1;
-    let puzzle = solver::Puzzle::load(p.unwrap());
+    let mut puzzle = solver::Puzzle::load(p.unwrap());
 
     match puzzle.solve() {
       Err(_) => {
