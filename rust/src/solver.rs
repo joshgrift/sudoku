@@ -4,6 +4,13 @@ pub struct Puzzle {
   placed: usize
 }
 
+struct Tile {
+  num: u32,
+  count: u32,
+  x: usize,
+  y: usize,
+}
+
 const SIZE:usize = 9;
 const SQUARE:usize = 3;
 
@@ -88,7 +95,37 @@ impl Puzzle {
         }
       }
 
-      // if we havn't done anything, escape the loop
+      // check for one option in a square
+      for i in 0..SQUARE {
+        for j in 0..SQUARE {
+          let mut candidates:Vec<Tile> = vec![];
+
+          for sx in 0..SQUARE {
+            for sy in 0..SQUARE {
+              let x = i * SQUARE + sx; 
+              let y = j * SQUARE + sy;
+          
+              match candidates.iter().position(|a| a.num == self.get(x, y)) {
+                Some(index) => { 
+                  candidates[index].count += 1;
+                }
+                None => {
+                  candidates.push(Tile {num: self.get(x, y), count: 1, x, y})
+                },
+              }
+            }
+          }
+
+          for i in candidates {
+            if i.count == 1 {
+              self.set(i.x, i.y, i.num);
+              action_taken = true;
+            }
+          }
+        }
+      }
+
+      // if we haven't done anything, escape the loop
       if !action_taken {
         return Result::Err(0);
       } else {
